@@ -45,7 +45,7 @@ class Yodao
     private function _initPdo()
     {
         try {
-            if (!$this->_dbh || !$this->_checkConnectionAvailable()) {
+            if (!$this->_dbh) {
                 $this->_dbh = new PDO(
                     $this->_dsn, $this->_username,
                     $this->_password, $this->_driverOptions
@@ -54,21 +54,6 @@ class Yodao
         } catch (Exception $e) {
             throw new YodaoException($e->getMessage());
         }
-    }
-
-    private function _checkConnectionAvailable()
-    {
-        $status = $this->_dbh->getAttribute(PDO::ATTR_SERVER_INFO);
-        switch ($this->_driverType) {
-            case self::DRIVER_MYSQL:
-                if ($status == 'MySQL server has gone away') {
-                    return false;
-                }
-                break;
-            default:
-                break;
-        }
-        return true;
     }
 
     public function prepare($sql, array $driverOptions = [])
