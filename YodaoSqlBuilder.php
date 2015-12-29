@@ -5,12 +5,12 @@ trait YodaoSqlBuilder
     public function count($where = '', array $whereData = [])
     {
         if ($where) {
-            $this->_transformWhere($where, $whereData);
+            $this->_composeWhere($where, $whereData);
             $where = " WHERE {$where}";
         }
         $sql = "SELECT count(1) as total FROM `{$this->_table}`{$where}";
         $ret = $this->_executeSql($sql, [], $whereData);
-        return $ret ? intval($ret[0]['total']) : 0;
+        return $ret[0]['total'];
     }
 
     /*
@@ -39,7 +39,7 @@ trait YodaoSqlBuilder
             $limitStr = null !== $offset ? ' LIMIT '.intval($offset).','.$limit : " LIMIT $limit";
         }
         if ($where) {
-            $this->_transformWhere($where, $whereData);
+            $this->_composeWhere($where, $whereData);
             $where = " WHERE {$where}";
         }
         $sql = "SELECT {$fields} FROM `{$this->_table}`{$where}{$orderByStr}{$limitStr}";
@@ -53,7 +53,7 @@ trait YodaoSqlBuilder
         if (empty($ret)) {
             return $ret;
         }
-        return $ret[0] ?: [];
+        return $ret[0];
     }
 
     /*
@@ -82,7 +82,7 @@ trait YodaoSqlBuilder
         return $ret ? $this->_dbh->lastInsertId() : false;
     }
 
-    public function insertUpdate(array $insertFields, array $updateFields)
+    public function insertOrUpdate(array $insertFields, array $updateFields)
     {
         if (empty($insertFields) || empty($updateFields)) {
             return false;
@@ -106,7 +106,7 @@ trait YodaoSqlBuilder
         $sql = "INSERT INTO `{$this->_table}` SET %s ON DUPLICATE KEY UPDATE %s";
         $sql = sprintf($sql, implode(',', $insertArr), implode(',', $updateArr));
         $ret = $this->_executeSql($sql, array_merge($insertBind, $updateBind));
-        return $ret ? $this->_rowCount() : 0;
+        return $this->_rowCount();
     }
 
     /*
@@ -121,7 +121,7 @@ trait YodaoSqlBuilder
         if (empty($fieldsMap) || empty($where) || empty($whereData)) {
             return false;
         }
-        $this->_transformWhere($where, $whereData);
+        $this->_composeWhere($where, $whereData);
         $sql = "UPDATE `{$this->_table}` SET %s WHERE {$where}";
         $fieldsArr = [];
         $bindFields = [];
@@ -146,18 +146,18 @@ trait YodaoSqlBuilder
         if (empty($where) || empty($whereData)) {
             return false;
         }
-        $this->_transformWhere($where, $whereData);
+        $this->_composeWhere($where, $whereData);
         $sql = "DELETE FROM `{$this->_table}` WHERE {$where}";
         $ret = $this->_executeSql($sql, [], $whereData);
         return $ret;
     }
 
-    public function insertSelect(array $fieldsMap, $where, array $whereData, $fromTable = null, $limit = null, $offset = null)
+    public function insertFromSelect(array $fieldsMap, $where, array $whereData, $fromTable = null, $limit = null, $offset = null)
     {
         if (empty($fieldsMap) || empty($where) || empty($whereData)) {
             return false;
         }
-        $this->_transformWhere($where, $whereData);
+        $this->_composeWhere($where, $whereData);
         $insertFields = array_keys($fieldsMap);
         $insertFields = array_map([$this, '_wrapField'], $insertFields);
         $bindFields = [];
@@ -184,7 +184,7 @@ trait YodaoSqlBuilder
         return $ret;
     }
 
-    public function multiInsert(array $rows, array $fixFields = [])
+    public function insertMulti(array $rows, array $fixFields = [])
     {
         if (empty($rows)) {
             return false;
@@ -224,7 +224,7 @@ trait YodaoSqlBuilder
 
     public function rowCount()
     {
-        return $this->_stmt ? $this->_stmt->rowCount() : 0;
+        return $this->_stmt->rowCount();
     }
 
     private function _executeSql($sql, array $fieldsMap = [], array $whereData = [])
@@ -243,22 +243,21 @@ trait YodaoSqlBuilder
             }
         }
         if (false === $stmt->execute()) {
-            $this->_logWriter->log("execute sql failed. sql: $sql; data:".var_export($fieldsMap, true). "; where:".var_export($whereData, true));
-            return false;
+            throw new YodaoException("execute sql failed. sql: $sql; data:".var_export($fieldsMap, true). "; where:".var_export($whereData, true));
         }
         if (0 === strpos($sql, 'SELECT ')) {
-            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
         return true;
     }
 
     /**
-     * _transformWhere 
+     * _composeWhere 
      * 
      * @param string $where e.g. [id in :idList] AND pack_id=:pack_id
      * @param array $whereData e.g. ['idList' => $idList, 'pack_id' => $packId]
      */
-    private function _transformWhere(&$where, &$whereData)
+    private function _composeWhere(&$where, &$whereData)
     {
         if (!preg_match_all('@\[([\w-]+)\s+(in|not in)\s+:([\w-]+)\]@i', $where, $matches, PREG_SET_ORDER)) {
             return;

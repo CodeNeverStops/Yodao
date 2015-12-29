@@ -1,22 +1,10 @@
 <?php
-include 'YodaoSqlBuilder.php';
 /**
  * Yodao
  *
  * @author Wayne You<lokiwuxi@gmail.com>
  */
-interface YodaoLogWriter 
-{
-    public function log($msg, $level = '');
-}
-
-class YodaoLogWriterDefault implements YodaoLogWriter
-{
-    public function log($msg, $level = '')
-    {
-        echo "[$level]",$msg;
-    }
-}
+include 'YodaoSqlBuilder.php';
 
 class YodaoException extends Exception
 {
@@ -44,16 +32,14 @@ class Yodao
     private $_driverType;
     private $_driverOptions;
     private $_stmt;
-    private $_logWriter;
 
-    public function __construct($dsn, $username = '', $password = '', array $driverOptions = [], YodaoLogWriter $logWriter = null)
+    public function __construct($dsn, $username = '', $password = '', array $driverOptions = [])
     {
         $this->_dsn = $dsn;
         $this->_username = $username;
         $this->_password = $password;
         $this->_driverType = $this->_parseDriverType($dsn);
         $this->_driverOptions = $driverOptions;
-        $this->_logWriter = $logWriter ?: new YodaoLogWriterDefault();
     }
 
     private function _initPdo()
@@ -66,8 +52,7 @@ class Yodao
                 );
             }
         } catch (Exception $e) {
-            $this->_logWriter->log($e->getMessage());
-            $this->_checkDNS($this->_dsn);
+            throw new YodaoException($e->getMessage());
         }
     }
 
@@ -114,18 +99,6 @@ class Yodao
         $result = call_user_func_array(array($this->_dbh, $method), $args);
         return $result;
     }
-
-    private function _checkDNS($dsn)
-    {
-        $host = $dsn;
-        $host = substr($host, strpos($host, 'host='));
-        $host = substr($host, strlen('host='));
-        $host = substr($host, 0, strpos($host, ';'));
-        $t = microtime(true);
-        $ip = gethostbyname($host);
-        $d = round((microtime(true) - $t)*1000);
-        $this->_logWriter->log(sprintf("[%s]name resolve(%s->%s):%fms", $dsn, $host, $ip, $d));
-    } 
 
     private function _parseDriverType($dsn)
     {
