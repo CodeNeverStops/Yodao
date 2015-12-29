@@ -243,7 +243,7 @@ trait YodaoSqlBuilder
             }
         }
         if (false === $stmt->execute()) {
-            throw new YodaoException("execute sql failed. sql: $sql; data:".var_export($fieldsMap, true). "; where:".var_export($whereData, true));
+            throw new YodaoException("execute sql failed. sql: $sql");
         }
         if (0 === strpos($sql, 'SELECT ')) {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
