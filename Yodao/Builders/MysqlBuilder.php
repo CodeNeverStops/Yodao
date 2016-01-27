@@ -1,6 +1,10 @@
 <?php
-trait YodaoSqlBuilder 
+namespace Yodao\Builders;
+
+class MysqlBuilder extends AbstractBuilder
 {
+
+    protected $_table;
 
     public function count($where = '', array $whereData = [])
     {
@@ -9,8 +13,7 @@ trait YodaoSqlBuilder
             $where = " WHERE {$where}";
         }
         $sql = "SELECT count(1) as total FROM `{$this->_table}`{$where}";
-        $ret = $this->_executeSql($sql, [], $whereData);
-        return $ret[0]['total'];
+        return $this->_result($sql, [], $whereData);
     }
 
     /*
@@ -43,17 +46,12 @@ trait YodaoSqlBuilder
             $where = " WHERE {$where}";
         }
         $sql = "SELECT {$fields} FROM `{$this->_table}`{$where}{$orderByStr}{$limitStr}";
-        $ret = $this->_executeSql($sql, [], $whereData);
-        return $ret;
+        return $this->_result($sql, [], $whereData);
     }
 
     public function selectOne($fields, $where = '', array $whereData = [], $orderBy = null)
     {
-        $ret = $this->select($fields, $where, $whereData, $orderBy, 1);
-        if (empty($ret)) {
-            return $ret;
-        }
-        return $ret[0];
+        return $this->select($fields, $where, $whereData, $orderBy, 1);
     }
 
     /*
@@ -78,8 +76,7 @@ trait YodaoSqlBuilder
             }
         }
         $sql = sprintf($sql, implode(',', $fieldsArr));
-        $ret = $this->_executeSql($sql, $fieldsMap);
-        return $ret ? $this->_dbh->lastInsertId() : false;
+        return $this->_result($sql, $fieldsMap);
     }
 
     public function insertOrUpdate(array $insertFields, array $updateFields)
@@ -105,8 +102,7 @@ trait YodaoSqlBuilder
         }
         $sql = "INSERT INTO `{$this->_table}` SET %s ON DUPLICATE KEY UPDATE %s";
         $sql = sprintf($sql, implode(',', $insertArr), implode(',', $updateArr));
-        $ret = $this->_executeSql($sql, array_merge($insertBind, $updateBind));
-        return $this->_rowCount();
+        return $this->_result($sql, array_merge($insertBind, $updateBind));
     }
 
     /*
@@ -137,8 +133,7 @@ trait YodaoSqlBuilder
             }
         }
         $sql = sprintf($sql, implode(',', $fieldsArr));
-        $ret = $this->_executeSql($sql, $bindFields, $whereData);
-        return $ret;
+        return $this->_result($sql, $bindFields, $whereData);
     }
 
     public function delete($where, array $whereData)
@@ -148,8 +143,7 @@ trait YodaoSqlBuilder
         }
         $this->_composeWhere($where, $whereData);
         $sql = "DELETE FROM `{$this->_table}` WHERE {$where}";
-        $ret = $this->_executeSql($sql, [], $whereData);
-        return $ret;
+        return $this->_result($sql, [], $whereData);
     }
 
     public function insertFromSelect(array $fieldsMap, $where, array $whereData, $fromTable = null, $limit = null, $offset = null)
@@ -180,8 +174,7 @@ trait YodaoSqlBuilder
         }
         $sql = "INSERT INTO `$this->_table` (%s) SELECT %s FROM `$fromTable` WHERE {$where}{$limitStr}";
         $sql = sprintf($sql, implode(',', $insertFields), implode(',', $fieldArr));
-        $ret = $this->_executeSql($sql, $bindFields, $whereData);
-        return $ret;
+        return $this->_result($sql, $bindFields, $whereData);
     }
 
     public function insertMulti(array $rows, array $fixFields = [])
@@ -218,89 +211,7 @@ trait YodaoSqlBuilder
         $lineStr = implode(',', $line);
         $sql = "INSERT INTO `$this->_table`(%s) VALUES %s";
         $sql = sprintf($sql, $fieldsStr, $lineStr);
-        $ret = $this->_executeSql($sql, $bindFields);
-        return $ret;
-    }
-
-    public function rowCount()
-    {
-        return $this->_stmt->rowCount();
-    }
-
-    private function _executeSql($sql, array $fieldsMap = [], array $whereData = [])
-    {
-        $this->_checkTable();
-        $type = $this->_checkType($sql);
-        $this->_stmt = $stmt = $this->prepare($sql);
-        if ($fieldsMap) {
-            foreach ($fieldsMap as $field => $v) {
-                $stmt->bindValue(":$field", $v);
-            }
-        }
-        if ($whereData) {
-            foreach ($whereData as $k=>$v) {
-                $stmt->bindValue(":$k", $v);
-            }
-        }
-        if (false === $stmt->execute()) {
-            throw new YodaoException("execute sql failed. sql: $sql");
-        }
-        if (0 === strpos($sql, 'SELECT ')) {
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        }
-        return true;
-    }
-
-    /**
-     * _composeWhere 
-     * 
-     * @param string $where e.g. [id in :idList] AND pack_id=:pack_id
-     * @param array $whereData e.g. ['idList' => $idList, 'pack_id' => $packId]
-     */
-    private function _composeWhere(&$where, &$whereData)
-    {
-        if (!preg_match_all('@\[([\w-]+)\s+(in|not in)\s+:([\w-]+)\]@i', $where, $matches, PREG_SET_ORDER)) {
-            return;
-        }
-        foreach ($matches as $match) {
-            $oldIn = $match[0];
-            $field = $match[1];
-            $inOp = $match[2];
-            $matchIdList = $match[3];
-            $tpl = $field.' '.strtoupper($inOp).' (%s)';
-            $idList = $whereData[$matchIdList];
-            unset($whereData[$matchIdList]);
-            $idPH = [];
-            foreach ($idList as $id) {
-                $k = "id{$id}";
-                $idPH[] = ":$k";
-                $whereData[$k] = $id;
-            }
-            $newIn = sprintf($tpl, implode(',', $idPH));
-            $where = str_replace($oldIn, $newIn, $where);
-        }
-    }
-
-    private function _wrapField($field)
-    {
-        return "`$field`";
-    }
-
-    private function _checkType($sql)
-    {
-        $type = substr($sql, 0, 7);
-        if (in_array(
-            $type, 
-            [
-                self::TYPE_SELECT,
-                self::TYPE_INSERT,
-                self::TYPE_UPDATE,
-                self::TYPE_DELETE
-            ]
-        )) {
-            return $type;
-        }
-        return self::TYPE_UNKNOWN;
+        return $this->_result($sql, $bindFields);
     }
 
 }
