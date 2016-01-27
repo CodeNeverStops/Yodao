@@ -1,2 +1,2 @@
 # Yodao
-A Lazy Dao for mysql, pgsql and mssql.
+A Lazy Dao for mysql(plan:pgsql and mssql).
