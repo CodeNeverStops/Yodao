@@ -94,4 +94,16 @@ $tblDao->delete('id=:id or name=:name', ['id' => 100, 'name' => 'new user']);
 
 ### Insert From Select
 ```php
+$ret = $tblDao->insertFromSelect(
+    [ // fields want to copy
+        'name' => 'youwei updated', 
+        'age' => '.', // '.' means copy the same value from 'source table'
+        'create_time' => '.',
+    ],
+    'age=:age',
+    ['age' => 30],
+    '', // source table, use the same table if omit
+    2, // limit
+    0 // offset
+);
 ```
