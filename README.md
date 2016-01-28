@@ -37,7 +37,7 @@ $tblDao = $dao->table('users');
 $ret = $tblDao->select('*', 'name=:name', ['name' => 'youwei']);
 ```
 
-### Select specify fields
+### Select specified fields
 ```php
 $ret = $tblDao->select(['id', 'name', 'age'], 'name=:name', ['name' => 'youwei']);
 ```
