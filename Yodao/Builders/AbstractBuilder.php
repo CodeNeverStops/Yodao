@@ -60,12 +60,12 @@ abstract class AbstractBuilder
         }
     }
 
-    private function _wrapField($field)
+    protected function _wrapField($field)
     {
         return "`$field`";
     }
 
-    protected function _result($sql, $bindMap, $whereMap)
+    protected function _result($sql, array $bindMap = [], array $whereMap = [])
     {
         return [
             'sql' => $sql,
