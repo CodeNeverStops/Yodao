@@ -3,7 +3,7 @@ A Lazy Dao for mysql(plan:pgsql and mssql).
 
 ## Example
 
-### database and table
+### Database and table
 ```bash
 mysql -h127.0.0.1 -uroot
 use yodao;
