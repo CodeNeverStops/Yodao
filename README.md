@@ -69,6 +69,29 @@ $tblDao->update(
         'age' => 30,
     ],
     'id=:id',
-    ['id' => 3]
+    ['id' => $insertId]
 );
+```
+
+### Insert Or update
+```php
+$ret = $tblDao->insertOrUpdate(
+    [ // insert fields
+        'id' => $insertId, 
+        'name' => 'new user',
+        'age' => 10,
+        'create_time' => time(),
+    ],
+    [ // update fields if the row is duplicated
+        'age' => 11,
+    ]
+);
+
+### Delete rows
+```php
+$tblDao->delete('id=:id or name=:name', ['id' => 100, 'name' => 'new user']);
+```
+
+### Insert From Select
+```php
 ```
