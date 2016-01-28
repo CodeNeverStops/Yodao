@@ -34,7 +34,11 @@ $tblDao = $dao->table('users');
 
 ### Select all fields
 ```php
-$ret = $tblDao->select('*', 'name=:name', ['name' => 'youwei']);
+$ret = $tblDao->select(
+    '*',  // select fields
+    'name=:name', // where conditions
+    ['name' => 'youwei'] // condition vars binding
+);
 ```
 
 ### Select specified fields
