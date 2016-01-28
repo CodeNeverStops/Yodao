@@ -32,11 +32,12 @@ $dao = new Yodao\DB("mysql:dbname=yodao;host=127.0.0.1", 'root', '');
 $tblDao = $dao->table('users');
 ```
 
-### Select
+### Select all fields
 ```php
 $ret = $tblDao->select('*', 'name=:name', ['name' => 'youwei']);
 ```
 
+### Select specify fields
 ```php
 $ret = $tblDao->select(['id', 'name', 'age'], 'name=:name', ['name' => 'youwei']);
 ```
@@ -64,12 +65,12 @@ $insertId = $tblDao->insert(
 ### Update
 ```php
 $tblDao->update(
-    [
+    [ // update fields
         'name' => 'updated user',
         'age' => 30,
     ],
-    'id=:id',
-    ['id' => $insertId]
+    'id=:id', // where condition
+    ['id' => $insertId] // condition vars binding
 );
 ```
 
@@ -89,7 +90,13 @@ $ret = $tblDao->insertOrUpdate(
 
 ### Delete rows
 ```php
-$tblDao->delete('id=:id or name=:name', ['id' => 100, 'name' => 'new user']);
+$tblDao->delete(
+    'id=:id or name=:name',  // where conditions
+    [ // condition vars binding
+        'id' => 100, 
+        'name' => 'new user'
+    ]
+);
 ```
 
 ### Insert From Select
