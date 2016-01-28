@@ -13,6 +13,7 @@ $dao = new Yodao\DB("mysql:dbname=$dbname;host=$host", $user, $password);
 ```php
 $ret = $dao->table('users')->selectOne('*', 'name=:name', ['name' => 'youwei']);
 ```
+
 ```php
 $ret = $dao->table('users')->selectOne(['id', 'name'], 'name=:name', ['name' => 'youwei']);
 ```
