@@ -107,3 +107,24 @@ $ret = $tblDao->insertFromSelect(
     0 // offset
 );
 ```
+
+### Insert Multiple Rows
+```php
+$tblDao->insertMulti(
+    [
+        [ // row 1
+            'name' => 'youwei1',
+            'age' => '10',
+        ],
+        [ // row 2
+            'name' => 'youwei2',
+            'age' => '20',
+        ],
+    ],
+    [ // these fields will merge into above every rows.
+        'create_time' => time(),
+    ]
+);
+```
+
+
