@@ -1,19 +1,74 @@
 # Yodao
 A Lazy Dao for mysql(plan:pgsql and mssql).
 
-## Usage
+## Example
+
+### database and table
+```bash
+mysql -h127.0.0.1 -uroot
+use yodao;
+desc users;
+```
+```
++-------------+------------------+------+-----+---------+----------------+
+| Field       | Type             | Null | Key | Default | Extra          |
++-------------+------------------+------+-----+---------+----------------+
+| id          | int(11)          | NO   | PRI | NULL    | auto_increment |
+| name        | varchar(50)      | NO   |     | NULL    |                |
+| age         | int(10) unsigned | NO   |     | NULL    |                |
+| create_time | int(10) unsigned | NO   |     | NULL    |                |
++-------------+------------------+------+-----+---------+----------------+
+4 rows in set (0.01 sec)
+```
 
 ### Init
 ```php
 include 'Yodao.php';
-$dao = new Yodao\DB("mysql:dbname=$dbname;host=$host", $user, $password);
+$dao = new Yodao\DB("mysql:dbname=yodao;host=127.0.0.1", 'root', '');
 ```
 
-### Insert One Row
+### Specify a table
 ```php
-$ret = $dao->table('users')->selectOne('*', 'name=:name', ['name' => 'youwei']);
+$tblDao = $dao->table('users');
+```
+
+### Select
+```php
+$ret = $tblDao->select('*', 'name=:name', ['name' => 'youwei']);
 ```
 
 ```php
-$ret = $dao->table('users')->selectOne(['id', 'name'], 'name=:name', ['name' => 'youwei']);
+$ret = $tblDao->select(['id', 'name', 'age'], 'name=:name', ['name' => 'youwei']);
+```
+
+### Select One
+```php
+$ret = $tblDao->selectOne('*', 'name=:name', ['name' => 'youwei']);
+```
+
+```php
+$ret = $tblDao->selectOne(['id', 'name', 'age'], 'name=:name', ['name' => 'youwei']);
+```
+
+### Insert 
+```php
+$insertId = $tblDao->insert(
+    [
+        'name' => 'test user',
+        'age' => 20,
+        'create_time' => time()
+    ]
+);
+```
+
+### Update
+```php
+$tblDao->update(
+    [
+        'name' => 'updated user',
+        'age' => 30,
+    ],
+    'id=:id',
+    ['id' => 3]
+);
 ```
