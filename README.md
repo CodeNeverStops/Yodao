@@ -1,5 +1,5 @@
 # Yodao
-A Lazy Dao for mysql(plan:pgsql and mssql).
+A Lazy Dao for MySQL (will support PgSQL and MSSQL in the future).
 
 ## Example
 
@@ -141,7 +141,7 @@ $tblDao->insertMulti(
             'age' => '20',
         ],
     ],
-    [ // these fields will merge into above every rows.
+    [ // these fields will merge into every rows above.
         'create_time' => time(),
     ]
 );
