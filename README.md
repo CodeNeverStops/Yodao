@@ -56,11 +56,11 @@ $ret = $tblDao->select(
 ```
 
 ### Select One
-- ```php
+```php
 $ret = $tblDao->selectOne('*', 'name=:name', ['name' => 'youwei']);
 ```
 
-- ```php
+```php
 $ret = $tblDao->selectOne(['id', 'name', 'age'], 'name=:name', ['name' => 'youwei']);
 ```
 
