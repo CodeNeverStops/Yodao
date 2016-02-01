@@ -46,6 +46,15 @@ $ret = $tblDao->select(
 $ret = $tblDao->select(['id', 'name', 'age'], 'name=:name', ['name' => 'youwei']);
 ```
 
+### Select rows by specified ids
+```php
+$ret = $tblDao->select(
+    ['id', 'name', 'age'], // fields 
+    '[id in :idList]',     // where conditions, like 'id in (1,2,3)', 'id' is the column, ':idList' is the variable 
+    ['idList' => [1, 2, 3]] // bind 'idList' variable
+);
+```
+
 ### Select One
 ```php
 $ret = $tblDao->selectOne('*', 'name=:name', ['name' => 'youwei']);
