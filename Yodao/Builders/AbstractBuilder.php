@@ -50,10 +50,12 @@ abstract class AbstractBuilder
             $idList = $whereData[$matchIdList];
             unset($whereData[$matchIdList]);
             $idPH = [];
+            $index = 0;
             foreach ($idList as $id) {
-                $k = "id{$id}";
+                $k = "{$field}_{$index}";
                 $idPH[] = ":$k";
                 $whereData[$k] = $id;
+                $index++;
             }
             $newIn = sprintf($tpl, implode(',', $idPH));
             $where = str_replace($oldIn, $newIn, $where);
