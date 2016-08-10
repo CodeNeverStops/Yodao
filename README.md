@@ -100,6 +100,7 @@ $ret = $tblDao->insertOrUpdate(
         'age' => 11,
     ]
 );
+```
 
 ### Delete rows
 ```php
@@ -146,5 +147,3 @@ $tblDao->insertMulti(
     ]
 );
 ```
-
-
